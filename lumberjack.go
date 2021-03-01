@@ -201,8 +201,10 @@ func (l *Logger) rotate() error {
 	if err := l.close(); err != nil {
 		return err
 	}
-	if err := l.OnRotate(filename); err != nil {
-		return err
+	if l.OnRotate != nil {
+		if err := l.OnRotate(filename); err != nil {
+			return err
+		}
 	}
 	if err := l.openNew(); err != nil {
 		return err
