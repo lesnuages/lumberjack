@@ -107,6 +107,10 @@ type Logger struct {
 	// using gzip. The default is not to perform compression.
 	Compress bool `json:"compress" yaml:"compress"`
 
+	// OnRotate is a callback called whenever a file rotation occurs.
+	// It is skipped if unspecified
+	OnRotate func(fileName string) error
+
 	size int64
 	file *os.File
 	mu   sync.Mutex
@@ -193,7 +197,11 @@ func (l *Logger) Rotate() error {
 // (if it exists), opens a new file with the original filename, and then runs
 // post-rotation processing and removal.
 func (l *Logger) rotate() error {
+	filename := l.file.Name()
 	if err := l.close(); err != nil {
+		return err
+	}
+	if err := l.OnRotate(filename); err != nil {
 		return err
 	}
 	if err := l.openNew(); err != nil {
